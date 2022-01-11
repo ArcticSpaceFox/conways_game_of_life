@@ -63,6 +63,9 @@ const GLIDER_GUN: [(usize, usize); 36] = [
     (4, 36),
 ];
 
+// TODO : template for beacon
+// const BEACON: [(usize, usize); 6] = [...];
+
 /// Config for the start of the game
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -97,11 +100,12 @@ impl MainState {
             "blinker" => {
                 start_cells_coords = BLINKER.iter().map(|&p| p.into()).collect::<Vec<Point>>();
             }
+            // TODO : add beacon
             _ => {
                 let mut rng = rand::thread_rng();
-                for i in 0..config.grid_width{
-                    for j in 0..config.grid_height{
-                        if rng.gen::<bool>(){
+                for i in 0..config.grid_width {
+                    for j in 0..config.grid_height {
+                        if rng.gen::<bool>() {
                             start_cells_coords.push((i, j).into());
                         }
                     }
@@ -110,10 +114,7 @@ impl MainState {
         }
         // Convert the starting states into a vector of points
         grid.set_state(&start_cells_coords);
-        MainState {
-            grid,
-            config,
-        }
+        MainState { grid, config }
     }
 }
 
@@ -212,6 +213,16 @@ fn main() -> GameResult {
                 .required(false)
                 .default_value("random"),
         )
+        .arg(
+            Arg::with_name("fps")
+                .short("f")
+                .long("fps")
+                .help("Updates per second")
+                .value_name("fps")
+                .takes_value(true)
+                .required(false)
+                .default_value("20"),
+        )
         .get_matches();
 
     // Get Configurations
@@ -223,7 +234,7 @@ fn main() -> GameResult {
         .unwrap();
     let initial_state = matches.value_of("initial_state").unwrap();
     let screen_size = (720., 720.);
-    let fps = 20;
+    let fps = matches.value_of("fps").unwrap().parse::<u32>().unwrap();
     // Set configuration
     let config: Config = Config {
         grid_width,
