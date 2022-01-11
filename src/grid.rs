@@ -2,6 +2,7 @@ use crate::cell::Cell;
 use crate::point::Point;
 use rayon::prelude::*;
 
+/// Grid structure holds cells in a m x n matrix
 pub struct Grid {
     width: usize,
     height: usize,
@@ -9,7 +10,7 @@ pub struct Grid {
 }
 
 impl Grid {
-    // Width and height of the Grid
+    /// Width and height of the Grid
     pub fn new(width: usize, height: usize) -> Self {
         Self {
             width,
@@ -17,6 +18,7 @@ impl Grid {
             cells: vec![Cell::new(false); width * height],
         }
     }
+    /// generates a new Matrix and sets given coords to true (alive)
     pub fn set_state(&mut self, cells_coords: &[Point]) {
         self.cells = vec![Cell::new(false); self.width * self.height];
         for &pos in cells_coords.iter() {
@@ -24,6 +26,7 @@ impl Grid {
             self.cells[idx].set_state(true);
         }
     }
+    /// applies all rules to given cell
     fn cell_next_state(&self, cell_idx: usize) -> bool {
         let cell = self.cells[cell_idx].clone();
         let cell_pos = self.index_to_coords(cell_idx);
@@ -34,7 +37,7 @@ impl Grid {
                 if x_off == 0 && y_off == 0 {
                     continue;
                 }
-                
+
                 let neighbour_coords = (cell_pos.x as isize + x_off, cell_pos.y as isize + y_off);
                 if neighbour_coords.0 < 0
                     || neighbour_coords.0 > self.width as isize - 1
@@ -43,9 +46,11 @@ impl Grid {
                 {
                     continue;
                 }
-                let neighbour_pos = Point {x: neighbour_coords.0 as usize, y: neighbour_coords.1 as usize};
-                let idx =
-                    self.coords_to_index(neighbour_pos);
+                let neighbour_pos = Point {
+                    x: neighbour_coords.0 as usize,
+                    y: neighbour_coords.1 as usize,
+                };
+                let idx = self.coords_to_index(neighbour_pos);
                 if self.cells[idx].is_alive() {
                     num_neighbour_alive += 1;
                 }
@@ -93,8 +98,11 @@ impl Grid {
         pos.y * self.width + pos.x
     }
 
-    /// Converts a index in the cells vecotr into pair of cell coords
+    /// Converts a index in the cells vector into pair of cell coords
     pub fn index_to_coords(&self, index: usize) -> Point {
-        Point {x: index % self.height, y: index / self.width}
+        Point {
+            x: index % self.height,
+            y: index / self.width,
+        }
     }
 }
