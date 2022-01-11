@@ -8,11 +8,12 @@ use crate::grid::Grid;
 use crate::point::Point;
 use clap::{App, Arg};
 
-use ggez::event;
 use ggez::event::EventHandler;
 use ggez::graphics::{self, Color};
+use ggez::{conf, event};
 use ggez::{Context, ContextBuilder, GameResult};
 use rand::Rng;
+use rayon::prelude::*;
 
 const GRID: bool = false;
 //const CELL_SIZE: f32 = SCREEN_SIZE.0 / GRID_WIDTH as f32;
@@ -62,9 +63,8 @@ const GLIDER_GUN: [(usize, usize); 36] = [
     (3, 36),
     (4, 36),
 ];
-
-// TODO : template for beacon
-// const BEACON: [(usize, usize); 6] = [...];
+#[allow(dead_code)]
+const BEACON: [(usize, usize); 6] = [(1, 1), (2, 1), (1, 2), (4, 3), (3, 4), (4, 4)];
 
 /// Config for the start of the game
 #[derive(Debug, Clone)]
@@ -86,32 +86,45 @@ impl MainState {
         // Initialize the grid based on configuration
         let mut grid = Grid::new(config.grid_width, config.grid_height);
         // Initialize starting configuration
-        let mut start_cells_coords: Vec<Point> = vec![];
-        match &config.initial_state[..] {
-            "glider-gun" => {
-                start_cells_coords = GLIDER_GUN.iter().map(|&p| p.into()).collect::<Vec<Point>>();
-            }
-            "toad" => {
-                start_cells_coords = TOAD.iter().map(|&p| p.into()).collect::<Vec<Point>>();
-            }
-            "glider" => {
-                start_cells_coords = GLIDER.iter().map(|&p| p.into()).collect::<Vec<Point>>();
-            }
-            "blinker" => {
-                start_cells_coords = BLINKER.iter().map(|&p| p.into()).collect::<Vec<Point>>();
-            }
-            // TODO : add beacon
+        // let mut start_cells_coords: Vec<Point> = vec![];
+        let start_cells_coords = match &config.initial_state[..] {
+            "glider-gun" => GLIDER_GUN.iter().map(|&p| p.into()).collect::<Vec<Point>>(),
+            "toad" => TOAD.iter().map(|&p| p.into()).collect::<Vec<Point>>(),
+            "glider" => GLIDER.iter().map(|&p| p.into()).collect::<Vec<Point>>(),
+            "blinker" => BLINKER.iter().map(|&p| p.into()).collect::<Vec<Point>>(),
+            "beacon" => BEACON.iter().map(|&p| p.into()).collect::<Vec<Point>>(),
             _ => {
-                let mut rng = rand::thread_rng();
-                for i in 0..config.grid_width {
-                    for j in 0..config.grid_height {
-                        if rng.gen::<bool>() {
-                            start_cells_coords.push((i, j).into());
-                        }
-                    }
-                }
+                // let mut _tmp: Vec<Point> = vec![];
+                // let mut rng = rand::thread_rng();
+                // for i in 0..config.grid_width {
+                //     for j in 0..config.grid_height {
+                //         if rng.gen::<bool>() {
+                //             _tmp.push((i, j).into());
+                //         }
+                //     }
+                // }
+                // _tmp
+
+                // FIXME : make me beautiful
+                (0..config.grid_height)
+                    .collect::<Vec<usize>>()
+                    .into_par_iter()
+                    .map(move |i| {
+                        (0..config.grid_width)
+                            .collect::<Vec<usize>>()
+                            .into_par_iter()
+                            .filter_map(move |j| {
+                                if rand::thread_rng().gen::<bool>() {
+                                    Some((i, j).into())
+                                } else {
+                                    None
+                                }
+                            })
+                    })
+                    .flatten()
+                    .collect::<Vec<Point>>()
             }
-        }
+        };
         // Convert the starting states into a vector of points
         grid.set_state(&start_cells_coords);
         MainState { grid, config }

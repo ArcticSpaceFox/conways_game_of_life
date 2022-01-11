@@ -13,3 +13,12 @@ impl From<(usize, usize)> for Point {
         }
     }
 }
+
+impl From<(&usize, &usize)> for Point {
+    fn from(item: (&usize, &usize)) -> Self {
+        Self {
+            x: item.0.to_owned(),
+            y: item.1.to_owned(),
+        }
+    }
+}

@@ -2,8 +2,12 @@
 name = "conways_game_of_life"
 version = "0.1.0"
 edition = "2021"
+authors = ["Z0tt3l", "ArcticSpaceFox"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
 
 [dependencies]
 clap = "2.33.3"
